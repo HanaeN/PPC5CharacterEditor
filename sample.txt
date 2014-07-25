@@ -1,0 +1,33 @@
+{
+  "CharacterInfo":{
+    "Name":"Monopoly Man",
+    "AI":"Standard",
+    "Dropset":"3253232522432532"
+  },
+  "Objects":[
+    {
+      "Objects":[],
+      "Keyframes": {
+        "x":[
+          {"index":0,"value":0},
+          {"index":60,"value":100,"ease":"sin-out"}
+        ],
+        "y":[
+          {"index":0,"value":0}
+	],
+        "z":[
+          {"index":0,"value":0}
+	],
+        "alpha":[
+          {"index":0,"value":0},
+          {"index":20,"value":1,"ease":"exp-out"}
+        ]
+      }
+    }
+  ],
+  "Scripts":[
+  ],
+  "Textures":{
+    "default.png":0
+  }
+}
