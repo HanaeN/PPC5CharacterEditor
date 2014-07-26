@@ -17,6 +17,7 @@ struct KeyframeList {
     QList<KeyframeObject> keyframes;
 };
 struct CharacterObject {
+    int index = 0;
     QString name;
     QList<CharacterObject*> children;
     QList<KeyframeList> parameters;
@@ -33,15 +34,13 @@ public:
     QModelIndex parent(const QModelIndex &child) const;
     QVariant data(const QModelIndex &index, int role) const;
     QModelIndex index(int row, int column, const QModelIndex &parent) const;
-    void addObject(CharacterObject* object, CharacterObject* parent);
-    CharacterObject* getObjectAt(int index);
-    CharacterObject* getParentAt(int index);
-    int calculateMaxRows() const;
-    int calculateRows(CharacterObject *object) const;
-    int findRow(CharacterObject *object, int targetIndex, int currentIndex);
+    void addObject(CharacterObject* object, CharacterObject* parent, int index = -1);
+    void removeObject(CharacterObject* object);
+    bool hasChildren(const QModelIndex &parent) const;
     ~TimelineModel();
 private:
-    CharacterObject *findObject;
+    void calculateIndexes();
+    void calculateIndex(CharacterObject *object);
     CharacterObject *characterObject;
 
 signals:

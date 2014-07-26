@@ -42,7 +42,11 @@
           <number>3</number>
          </property>
          <item>
-          <widget class="QTreeView" name="e_Editor"/>
+          <widget class="QTreeView" name="e_Editor">
+           <attribute name="headerDefaultSectionSize">
+            <number>200</number>
+           </attribute>
+          </widget>
          </item>
         </layout>
        </widget>

@@ -7,17 +7,11 @@ TimelineModel::TimelineModel(QObject *parent) :
     characterObject = new CharacterObject();
     characterObject->name = "Base";
     characterObject->children = QList<CharacterObject*>();
-    beginInsertRows(createIndex(0, 0, characterObject), 0, 1);
     CharacterObject *e = new CharacterObject();
-    e->name = "text";
-    e->parent = characterObject;
-    characterObject->children.append(e);
-    e = new CharacterObject();
-    e->name = "text 2";
-    e->parent = characterObject;
-    characterObject->children.append(e);
-    endInsertRows();
-
+//    e = new CharacterObject();
+//    e->name = "testing add object";
+//    addObject(e, characterObject, 0);
+//    removeObject(characterObject->children[0]);
 }
 
 TimelineModel::~TimelineModel() {
@@ -31,11 +25,13 @@ int TimelineModel::columnCount(const QModelIndex &parent) const {
 QModelIndex TimelineModel::parent(const QModelIndex &child) const {
     CharacterObject *object = (CharacterObject*)child.internalPointer();
     if (object->parent == NULL) return QModelIndex();
-    return createIndex(object->parent->children.indexOf(object), child.column(), object->parent);
+    return createIndex(object->parent->children.indexOf(object), 0, object->parent);
 }
 
 int TimelineModel::rowCount(const QModelIndex &parent) const {
-    return calculateMaxRows();
+    if (parent.isValid()) {
+        return ((CharacterObject*)parent.internalPointer())->children.count();
+    } else return 1;
 }
 
 QVariant TimelineModel::data(const QModelIndex &index, int role) const {
@@ -48,51 +44,67 @@ QVariant TimelineModel::data(const QModelIndex &index, int role) const {
 }
 
 QModelIndex TimelineModel::index(int row, int column, const QModelIndex &parent) const {
-    if (parent.isValid() && row >= 0 && row < ((CharacterObject*)parent.internalPointer())->children.count()) {
-        return createIndex(row, column, ((CharacterObject*)parent.internalPointer())->children[row]);
-    } else if (row == 0 && !parent.isValid()) return createIndex(row, column, characterObject);
+    CharacterObject *obj = NULL, *parobj;
+    if (parent.isValid()) {
+        parobj = (CharacterObject*)parent.internalPointer();
+        if (row < 0 || row >= parobj->children.count()) return QModelIndex();
+        obj = parobj->children[row];
+    } else if (row == 0) {
+        obj = characterObject;
+    }
+    if (obj) return createIndex(row, column, (void*)obj);
     return QModelIndex();
 }
 
-int TimelineModel::calculateMaxRows() const {
-    int size = 1;
+void TimelineModel::calculateIndexes() {
+    characterObject->index = 0;
     for (int n = 0; n < characterObject->children.count(); n++) {
-        size += calculateRows(characterObject->children[n]);
+        characterObject->children[n]->index = n;
+        calculateIndex(characterObject->children[n]);
     }
-    return size;
 }
 
-int TimelineModel::calculateRows(CharacterObject *object) const {
-    int size = 1;
+void TimelineModel::calculateIndex(CharacterObject *object) {
     for (int n = 0; n < object->children.count(); n++) {
-        size += calculateRows(object->children[n]);
-    }
-    return size;
-}
-
-void TimelineModel::addObject(CharacterObject *object, CharacterObject *parent) {
-
-}
-
-CharacterObject* TimelineModel::getObjectAt(int index) {
-    if (index == 0) return characterObject;
-    findObject = NULL;
-    int currentIndex = 0;
-    for (int n = 0; n < characterObject->children.count(); n++) {
-        currentIndex = findRow(characterObject->children[n], index, currentIndex);
-        if (findObject != NULL) return findObject;
+        object->children[n]->index = n;
+        calculateIndex(object->children[n]);
     }
 }
 
-int TimelineModel::findRow(CharacterObject *object, int targetIndex, int currentIndex) {
-    if (currentIndex == targetIndex) return currentIndex;
-    currentIndex++;
-    if (currentIndex == targetIndex) { findObject = object; return currentIndex; }
-    for (int n = 0; n < object->children.count(); n++) {
-        currentIndex = findRow(object->children[n], targetIndex, currentIndex);
-        if (currentIndex == targetIndex) return currentIndex;
+void TimelineModel::removeObject(CharacterObject *object) {
+    if (object->parent != NULL) {
+        qDebug() << object->parent->name << object->index << object->name;
+        beginRemoveRows(createIndex(object->parent->index, 0, object->parent), object->index, object->index);
+        object->parent->children.removeOne(object);
+        delete object;
+        endRemoveRows();
+        calculateIndexes();
     }
 }
 
-CharacterObject* TimelineModel::getParentAt(int index) {
+// object to be added. parent to add it to. index to insert before.
+void TimelineModel::addObject(CharacterObject *object, CharacterObject *parent, int index) {
+    if (parent != NULL) {
+        int position = index;
+        if (index == -1) {
+            position = parent->children.count();
+        } else {
+            if (position < 0) position = 0;
+            if (position > parent->children.count()) position = parent->children.count();
+        }
+        beginInsertRows(createIndex(parent->index, 0, parent), position, position);
+        object->parent = parent;
+        parent->children.insert(position, object);
+        endInsertRows();
+        calculateIndexes();
+    } else {
+        qDebug() << "Could not add CharacterObject to TimelineModel: invalid parent";
+    }
+}
+
+bool TimelineModel::hasChildren(const QModelIndex &parent) const {
+    if (parent.isValid()) {
+        if (((CharacterObject*)parent.internalPointer())->children.count() > 0) return true;
+    } else return true;
+    return false;
 }
