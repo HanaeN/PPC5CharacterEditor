@@ -94,9 +94,11 @@ void TimelineModel::addObject(CharacterObject *object, CharacterObject *parent, 
         }
         beginInsertRows(createIndex(parent->index, 0, parent), position, position);
         object->parent = parent;
+        object->index = index;
         parent->children.insert(position, object);
         endInsertRows();
-        calculateIndexes();
+        for (int n = index + 1; n < parent->children.count(); n++)
+            parent->children[n]->index++;
     } else {
         qDebug() << "Could not add CharacterObject to TimelineModel: invalid parent";
     }
@@ -107,4 +109,14 @@ bool TimelineModel::hasChildren(const QModelIndex &parent) const {
         if (((CharacterObject*)parent.internalPointer())->children.count() > 0) return true;
     } else return true;
     return false;
+}
+
+void TimelineModel::importFromJSONString(QString JSON) {
+    for (int n = 0; n < characterObject->children.count(); n++) // clear children
+        removeObject(characterObject->children[0]);
+    // import from a JSON string using QtJSON
+}
+
+QString TimelineModel::exportToJSONString() {
+    return "{}";
 }

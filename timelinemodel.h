@@ -36,6 +36,8 @@ public:
     QModelIndex index(int row, int column, const QModelIndex &parent) const;
     void addObject(CharacterObject* object, CharacterObject* parent, int index = -1);
     void removeObject(CharacterObject* object);
+    void importFromJSONString(QString JSON);
+    QString exportToJSONString();
     bool hasChildren(const QModelIndex &parent) const;
     ~TimelineModel();
 private:
