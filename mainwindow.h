@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+class TimelineModel;
+
 namespace Ui {
 class MainWindow;
 }
@@ -14,6 +16,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    TimelineModel *timeline;
+private slots:
+    void on_action_Exit_triggered();
 
 private:
     Ui::MainWindow *ui;

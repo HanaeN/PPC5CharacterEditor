@@ -13,8 +13,12 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    timelinedelegate.cpp \
+    timelinemodel.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    timelinedelegate.h \
+    timelinemodel.h
 
 FORMS    += mainwindow.ui
