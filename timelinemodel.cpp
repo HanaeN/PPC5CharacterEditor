@@ -5,13 +5,14 @@ TimelineModel::TimelineModel(QObject *parent) :
     QAbstractItemModel(parent)
 {
     characterObject = new CharacterObject();
-    characterObject->name = "Base";
+    characterObject->name = "Master";
     characterObject->children = QList<CharacterObject*>();
+    setupParameters(characterObject->parameters);
     CharacterObject *e = new CharacterObject();
-//    e = new CharacterObject();
-//    e->name = "testing add object";
-//    addObject(e, characterObject, 0);
-//    removeObject(characterObject->children[0]);
+    e = new CharacterObject();
+    e->name = "testing add object";
+    setupParameters(e->parameters);
+    addObject(e, characterObject);
 }
 
 TimelineModel::~TimelineModel() {
@@ -119,4 +120,29 @@ void TimelineModel::importFromJSONString(QString JSON) {
 
 QString TimelineModel::exportToJSONString() {
     return "{}";
+}
+
+void TimelineModel::setupParameters(QList<KeyframeList*> &parameters) {
+    parameters.clear();
+    KeyframeList *c = new KeyframeList();
+    c->propertyName = "alpha";
+    parameters.append(c);
+    c = new KeyframeList();
+    c->propertyName = "posX";
+    parameters.append(c);
+    c = new KeyframeList();
+    c->propertyName = "posY";
+    parameters.append(c);
+    c = new KeyframeList();
+    c->propertyName = "zIndex";
+    parameters.append(c);
+    c = new KeyframeList();
+    c->propertyName = "angle";
+    parameters.append(c);
+    c = new KeyframeList();
+    c->propertyName = "scaleX";
+    parameters.append(c);
+    c = new KeyframeList();
+    c->propertyName = "scaleY";
+    parameters.append(c);
 }

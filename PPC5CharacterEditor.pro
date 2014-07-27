@@ -15,10 +15,12 @@ CONFIG += c++11
 SOURCES += main.cpp\
         mainwindow.cpp \
     timelinedelegate.cpp \
-    timelinemodel.cpp
+    timelinemodel.cpp \
+    timelineheaderview.cpp
 
 HEADERS  += mainwindow.h \
     timelinedelegate.h \
-    timelinemodel.h
+    timelinemodel.h \
+    timelineheaderview.h
 
 FORMS    += mainwindow.ui

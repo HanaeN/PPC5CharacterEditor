@@ -20,7 +20,7 @@ struct CharacterObject {
     int index = 0;
     QString name;
     QList<CharacterObject*> children;
-    QList<KeyframeList> parameters;
+    QList<KeyframeList*> parameters;
     CharacterObject *parent = NULL;
 };
 
@@ -38,6 +38,7 @@ public:
     void removeObject(CharacterObject* object);
     void importFromJSONString(QString JSON);
     QString exportToJSONString();
+    void setupParameters(QList<KeyframeList *> &parameters);
     bool hasChildren(const QModelIndex &parent) const;
     ~TimelineModel();
 private:
