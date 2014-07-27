@@ -7,20 +7,40 @@
 namespace Keyframe {
     enum PropertyType{INT, FLOAT};
 }
+struct TimelineObject {
+    enum Type {CharObject, KeyObject, TweenObject};
+    TimelineObject(Type type) : type(type) {}
+    Type type;
+};
+
 struct KeyframeObject {
     double value = 0;
     short frameIndex = 0;
 };
-struct KeyframeList {
+
+struct TweenList;
+struct KeyframeList : public TimelineObject {
+    KeyframeList() : TimelineObject(KeyObject) {}
     QString propertyName;
     Keyframe::PropertyType propertyType = Keyframe::INT;
     QList<KeyframeObject> keyframes;
+    TweenList *parent = NULL;
 };
-struct CharacterObject {
+
+struct CharacterObject;
+struct TweenList : public TimelineObject {
+    TweenList(): TimelineObject(TweenObject) {}
+    QList<KeyframeList*> tweens;
+    CharacterObject *parent = NULL;
+};
+
+struct CharacterObject : public TimelineObject {
+    CharacterObject() : TimelineObject(CharObject) { tweenList = new TweenList(); tweenList->parent = this; }
+    ~CharacterObject() { delete tweenList; }
     int index = 0;
     QString name;
     QList<CharacterObject*> children;
-    QList<KeyframeList*> parameters;
+    TweenList *tweenList;
     CharacterObject *parent = NULL;
 };
 
@@ -37,8 +57,9 @@ public:
     void addObject(CharacterObject* object, CharacterObject* parent, int index = -1);
     void removeObject(CharacterObject* object);
     void importFromJSONString(QString JSON);
+    void insertKeyframe(CharacterObject* object, QString propertyName, int frameIndex, double value);
     QString exportToJSONString();
-    void setupParameters(QList<KeyframeList *> &parameters);
+    void setupParameters(TweenList *parameters);
     bool hasChildren(const QModelIndex &parent) const;
     ~TimelineModel();
 private:

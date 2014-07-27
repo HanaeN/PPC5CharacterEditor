@@ -7,11 +7,11 @@ TimelineModel::TimelineModel(QObject *parent) :
     characterObject = new CharacterObject();
     characterObject->name = "Master";
     characterObject->children = QList<CharacterObject*>();
-    setupParameters(characterObject->parameters);
+    setupParameters(characterObject->tweenList);
     CharacterObject *e = new CharacterObject();
     e = new CharacterObject();
     e->name = "testing add object";
-    setupParameters(e->parameters);
+    setupParameters(e->tweenList);
     addObject(e, characterObject);
 }
 
@@ -24,32 +24,70 @@ int TimelineModel::columnCount(const QModelIndex &parent) const {
 }
 
 QModelIndex TimelineModel::parent(const QModelIndex &child) const {
-    CharacterObject *object = (CharacterObject*)child.internalPointer();
-    if (object->parent == NULL) return QModelIndex();
-    return createIndex(object->parent->children.indexOf(object), 0, object->parent);
+//    qDebug() << dynamic_cast<CharacterObject*>(child.internalPointer());
+    TimelineObject *object = (TimelineObject*)child.internalPointer();
+    if (object->type == TimelineObject::CharObject) {
+        if (((CharacterObject*)object)->parent == NULL) return QModelIndex();
+        return createIndex(((CharacterObject*)object)->parent->children.indexOf((CharacterObject*)object) + 1, 0, ((CharacterObject*)object)->parent);
+    }
+    if (object->type == TimelineObject::TweenObject) {
+        return createIndex(0, 0, ((TweenList*)object)->parent);
+    }
+    if (object->type == TimelineObject::KeyObject) {
+        return createIndex(((TweenList*)(((KeyframeList*)object)->parent))->tweens.indexOf((KeyframeList*)object), 0, ((KeyframeList*)object)->parent);
+    }
 }
 
 int TimelineModel::rowCount(const QModelIndex &parent) const {
     if (parent.isValid()) {
-        return ((CharacterObject*)parent.internalPointer())->children.count();
+        TimelineObject *t = (TimelineObject*)parent.internalPointer();
+        if (t->type == TimelineObject::CharObject) {
+            return 2;
+            qDebug() << ((CharacterObject*)parent.internalPointer())->children.count() + 1 << "p";
+            return ((CharacterObject*)parent.internalPointer())->children.count() + 1;
+        }
+        if (t->type == TimelineObject::TweenObject) {
+            return ((TweenList*)parent.internalPointer())->tweens.count();
+        }
     } else return 1;
 }
 
 QVariant TimelineModel::data(const QModelIndex &index, int role) const {
     if (role == Qt::DisplayRole) { // return drawing data
-        CharacterObject *object = (CharacterObject*)index.internalPointer();
-        if (index.column() == 0) return object->name;
-        if (index.column() == 1) return qVariantFromValue((void*)&object->parameters);
+        TimelineObject *t = (TimelineObject*)index.internalPointer();
+        if (t->type == TimelineObject::CharObject) {
+            CharacterObject *object = (CharacterObject*)index.internalPointer();
+            if (index.column() == 0) return object->name;
+            if (index.column() == 1) return qVariantFromValue((void*)&object->tweenList->tweens);
+        } else if (t->type == TimelineObject::TweenObject) {
+            TweenList *object = (TweenList*)index.internalPointer();
+            if (index.column() == 0) return "Tweens";
+            if (index.column() == 1) return qVariantFromValue((void*)&object->tweens);
+        } else {
+            KeyframeList *object = (KeyframeList*)index.internalPointer();
+            if (index.column() == 0) return object->propertyName;
+            if (index.column() == 1) return qVariantFromValue((void*)&object->keyframes);
+        }
     }
     return QVariant();
 }
 
 QModelIndex TimelineModel::index(int row, int column, const QModelIndex &parent) const {
-    CharacterObject *obj = NULL, *parobj;
+    TimelineObject *obj = NULL, *parobj;
     if (parent.isValid()) {
-        parobj = (CharacterObject*)parent.internalPointer();
-        if (row < 0 || row >= parobj->children.count()) return QModelIndex();
-        obj = parobj->children[row];
+        parobj = (TimelineObject*)parent.internalPointer();
+        if (row == 0 && parobj->type == TimelineObject::CharObject) {
+            obj = ((CharacterObject*)parobj)->tweenList;
+        } else {
+            if (parobj->type == TimelineObject::CharObject) {
+                if (row < 1 || row >= ((CharacterObject*)parobj)->children.count() + 1) return QModelIndex();
+                obj = ((CharacterObject*)parobj)->children[row - 1];
+            }
+        }
+        if (parobj->type == TimelineObject::TweenObject) {
+            if (row < 0 || row >= ((TweenList*)parobj)->tweens.count()) return QModelIndex();
+            obj = ((TweenList*)parobj)->tweens[row];
+        }
     } else if (row == 0) {
         obj = characterObject;
     }
@@ -107,7 +145,11 @@ void TimelineModel::addObject(CharacterObject *object, CharacterObject *parent, 
 
 bool TimelineModel::hasChildren(const QModelIndex &parent) const {
     if (parent.isValid()) {
-        if (((CharacterObject*)parent.internalPointer())->children.count() > 0) return true;
+        TimelineObject *t = (TimelineObject*)parent.internalPointer();
+        if (t->type == TimelineObject::CharObject) return true;
+        if (t->type == TimelineObject::TweenObject) {
+            if (((TweenList*)parent.internalPointer())->tweens.count() > 0) return true;
+        }
     } else return true;
     return false;
 }
@@ -122,27 +164,37 @@ QString TimelineModel::exportToJSONString() {
     return "{}";
 }
 
-void TimelineModel::setupParameters(QList<KeyframeList*> &parameters) {
-    parameters.clear();
-    KeyframeList *c = new KeyframeList();
-    c->propertyName = "alpha";
-    parameters.append(c);
-    c = new KeyframeList();
-    c->propertyName = "posX";
-    parameters.append(c);
-    c = new KeyframeList();
-    c->propertyName = "posY";
-    parameters.append(c);
-    c = new KeyframeList();
-    c->propertyName = "zIndex";
-    parameters.append(c);
-    c = new KeyframeList();
-    c->propertyName = "angle";
-    parameters.append(c);
-    c = new KeyframeList();
-    c->propertyName = "scaleX";
-    parameters.append(c);
-    c = new KeyframeList();
-    c->propertyName = "scaleY";
-    parameters.append(c);
+void TimelineModel::setupParameters(TweenList* parameters) {
+    parameters->tweens.clear();
+    QStringList properties;
+    properties << "alpha" << "posX" << "posY" << "zIndex" << "angle" << "scaleX" << "scaleY";
+    for (int n = 0; n < properties.count(); n++) {
+        KeyframeList *c = new KeyframeList();
+        c->propertyName = properties[n];
+        c->parent = parameters;
+        parameters->tweens.append(c);
+    }
+}
+
+void TimelineModel::insertKeyframe(CharacterObject *object, QString propertyName, int frameIndex, double value) {
+    for (int n = 0; n < object->tweenList->tweens.count(); n++) {
+        KeyframeList *keyframelist = object->tweenList->tweens[n];
+        if (keyframelist->propertyName == propertyName) { // found;
+            for (int i = 0; i < keyframelist->keyframes.count(); i++) { // update existing frame if it exists
+                KeyframeObject &obj = keyframelist->keyframes[i];
+                if (obj.frameIndex == frameIndex) { obj.value = value; return; }
+            }
+            KeyframeObject obj;
+            obj.frameIndex = frameIndex;
+            obj.value = value;
+            if (keyframelist->keyframes.count() == 0) keyframelist->keyframes.append(obj); // no need to look for the later keyframe
+            else {
+                for (int i = 0; i < keyframelist->keyframes.count(); i++) { // insert before the next index
+                    KeyframeObject &obj = keyframelist->keyframes[i];
+                    if (obj.frameIndex > frameIndex) { keyframelist->keyframes.insert(i, obj); return; }
+                }
+            }
+            return;
+        }
+    }
 }

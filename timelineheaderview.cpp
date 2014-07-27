@@ -13,7 +13,7 @@ int TimelineHeaderView::sectionSizeHint(int logicalIndex) const {
 
 void TimelineHeaderView::paintSection(QPainter *painter, const QRect &rect, int logicalIndex) const {
     painter->setClipRect(rect);
-    int marginL = 50;
+    int marginL = 15;
     int sX = rect.left() + marginL;
     int sY = rect.top();
     int h = rect.height();
@@ -24,7 +24,7 @@ void TimelineHeaderView::paintSection(QPainter *painter, const QRect &rect, int 
     painter->fillRect(rect, bgGradient);
     if (logicalIndex == 1) {
         painter->setPen(QColor(128, 128, 128, 200));
-        painter->drawLine(QPoint(rect.left() + 1, sY + 2), QPoint(rect.left() + 1, sY + h - 4));
+        painter->drawLine(QPoint(rect.left() + 1, sY + 4), QPoint(rect.left() + 1, sY + h - 4));
         int cells = ceil(rect.width() / 10);
         painter->setPen(QColor(0, 0, 0));
         for (int n = 0; n <= cells; n++) {
@@ -39,7 +39,7 @@ void TimelineHeaderView::paintSection(QPainter *painter, const QRect &rect, int 
         }
     } else {
         painter->setPen(QColor(128, 128, 128, 200));
-        painter->drawLine(QPoint(rect.right() - 1, sY + 2), QPoint(rect.right() - 1, sY + h - 4));
+        painter->drawLine(QPoint(rect.right() - 1, sY + 4), QPoint(rect.right() - 1, sY + h - 4));
     }
 }
 
