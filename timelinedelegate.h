@@ -3,6 +3,8 @@
 
 #include <QStyledItemDelegate>
 
+struct KeyframeObject;
+
 class TimelineDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
@@ -18,6 +20,7 @@ public:
     QModelIndex selectedParent;
 signals:
     void timelinePositionChange(int x);
+    void keyframeSelected(KeyframeObject *obj);
 public slots:
 
 };

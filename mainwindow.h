@@ -6,6 +6,7 @@
 class TimelineModel;
 class TimelineDelegate;
 class TimelineHeaderView;
+struct KeyframeObject;
 
 namespace Ui {
 class MainWindow;
@@ -26,7 +27,9 @@ private slots:
     void on_e_timelineScroll_sliderMoved(int position);
     void on_e_timelineScroll_valueChanged(int value);
     void onTimelinePositionChanged(int x);
+    void onKeyframeSelected(KeyframeObject* obj);
 private:
+    KeyframeObject *editingKeyframe = NULL;
     Ui::MainWindow *ui;
 };
 

@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->e_Editor->setMouseTracking(true);
     headerView->resizeSection(0, 200);
     connect(delegate, SIGNAL(timelinePositionChange(int)), this, SLOT(onTimelinePositionChanged(int)));
+    connect(delegate, SIGNAL(keyframeSelected(KeyframeObject*)), this, SLOT(onKeyframeSelected(KeyframeObject*)));
 }
 
 
@@ -53,4 +54,18 @@ void MainWindow::onTimelinePositionChanged(int x) {
     headerView->timelinePos = x;
     headerView->viewport()->update();
     ui->e_Editor->viewport()->update();
+}
+
+void MainWindow::onKeyframeSelected(KeyframeObject *obj) {
+    if (obj != NULL) {
+        ui->e_value->setText(QString::number(obj->value));
+        ui->e_easingin->setCurrentIndex(0);
+        ui->grp_keyframe->setEnabled(true);
+        editingKeyframe = obj;
+    } else {
+        ui->e_value->setText("0");
+        ui->e_easingin->setCurrentIndex(0);
+        ui->grp_keyframe->setEnabled(false);
+        editingKeyframe = NULL;
+    }
 }

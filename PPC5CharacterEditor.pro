@@ -16,11 +16,13 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     timelinedelegate.cpp \
     timelinemodel.cpp \
-    timelineheaderview.cpp
+    timelineheaderview.cpp \
+    easingmath.cpp
 
 HEADERS  += mainwindow.h \
     timelinedelegate.h \
     timelinemodel.h \
-    timelineheaderview.h
+    timelineheaderview.h \
+    easingmath.h
 
 FORMS    += mainwindow.ui

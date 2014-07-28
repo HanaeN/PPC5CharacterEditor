@@ -96,6 +96,30 @@ bool TimelineDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, con
             selectedRow = index.row();
             selectedParent = index.parent();
             selectedX = mX;
+
+            KeyframeList *o = (KeyframeList*)index.internalPointer();
+            bool emitted = false;
+            for (int n = 0; n < o->keyframes.count(); n++) {
+                KeyframeObject &obj = o->keyframes[n];
+                if (obj.frameIndex == mX) {
+                    emitted = true;
+                    emit keyframeSelected(&o->keyframes[n]);
+                    break;
+                }
+            }
+            if (!emitted) {
+                for (int n = 0; n < o->keyframes.count(); n++) {
+                    KeyframeObject &obj = o->keyframes[n];
+                    if (obj.frameIndex < mX && (n < o->keyframes.count() - 1 && o->keyframes[n + 1].frameIndex > mX)) {
+                        emitted = true;
+                        emit keyframeSelected(&o->keyframes[n]);
+                        break;
+                    }
+                }
+            }
+            if (!emitted) {
+                emit keyframeSelected(NULL);
+            }
             emit this->timelinePositionChange(mX);
         }
     }
