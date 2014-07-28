@@ -8,17 +8,13 @@ TimelineModel::TimelineModel(QObject *parent) :
     characterObject->name = "Master";
     characterObject->children = QList<CharacterObject*>();
     setupParameters(characterObject->tweenList);
-    insertKeyframe(characterObject, "alpha", 0, 0);
-    insertKeyframe(characterObject, "alpha", 20, 1);
-    insertKeyframe(characterObject, "alpha", 21, 1);
-    insertKeyframe(characterObject, "posX", 0, 0);
-    insertKeyframe(characterObject, "posX", 10, 100);
-    insertKeyframe(characterObject, "posX", 12, 120);
-    CharacterObject *e = new CharacterObject();
-    e = new CharacterObject();
-    e->name = "testing add object";
-    setupParameters(e->tweenList);
-    addObject(e, characterObject);
+    insertKeyframe(characterObject, "alpha", 0, 1, Keyframe::NoEasing, Keyframe::LinearEasing);
+    insertKeyframe(characterObject, "posX", 0, 0, Keyframe::NoEasing, Keyframe::LinearEasing);
+    insertKeyframe(characterObject, "posY", 0, 0, Keyframe::NoEasing, Keyframe::LinearEasing);
+    insertKeyframe(characterObject, "angle", 0, 0, Keyframe::NoEasing, Keyframe::LinearEasing);
+    insertKeyframe(characterObject, "zIndex", 0, 0, Keyframe::NoEasing, Keyframe::LinearEasing);
+    insertKeyframe(characterObject, "scaleX", 0, 1, Keyframe::NoEasing, Keyframe::LinearEasing);
+    insertKeyframe(characterObject, "scaleY", 0, 1, Keyframe::NoEasing, Keyframe::LinearEasing);
 }
 
 TimelineModel::~TimelineModel() {
@@ -178,21 +174,25 @@ void TimelineModel::setupParameters(TweenList* parameters) {
         KeyframeList *c = new KeyframeList();
         c->propertyName = properties[n];
         c->parent = parameters;
+        if (properties[n] == "alpha" || properties[n] == "angle" || properties[n] == "scaleX" || properties[n] == "scaleY") c->propertyType = Keyframe::FLOAT;
         parameters->tweens.append(c);
     }
 }
 
-void TimelineModel::insertKeyframe(CharacterObject *object, QString propertyName, int frameIndex, double value) {
+void TimelineModel::insertKeyframe(CharacterObject *object, QString propertyName, int frameIndex, double value,
+                                   Keyframe::EasingMode easeIn, Keyframe::EasingMode easeOut) {
     for (int n = 0; n < object->tweenList->tweens.count(); n++) {
         KeyframeList *keyframelist = object->tweenList->tweens[n];
         if (keyframelist->propertyName == propertyName) { // found;
             for (int i = 0; i < keyframelist->keyframes.count(); i++) { // update existing frame if it exists
                 KeyframeObject &obj = keyframelist->keyframes[i];
-                if (obj.frameIndex == frameIndex) { obj.value = value; return; }
+                if (obj.frameIndex == frameIndex) { obj.value = value; obj.easeIn = easeIn; obj.easeOut = easeOut; return; }
             }
             KeyframeObject obj;
             obj.frameIndex = frameIndex;
             obj.value = value;
+            obj.easeIn = easeIn;
+            obj.easeOut = easeOut;
             if (keyframelist->keyframes.count() > 0) {
                 for (int i = 0; i < keyframelist->keyframes.count(); i++) { // insert before the next index
                     KeyframeObject &obj = keyframelist->keyframes[i];

@@ -6,7 +6,7 @@
 
 namespace Keyframe {
     enum PropertyType{INT, FLOAT};
-    enum EasingMode {NoEasing, LinearEasing, CubicEasing, SinusodialEasing, ExponentialEasing};
+    enum EasingMode {NoEasing, LinearEasing, CubicEasing, QuadraticEasing, SinusoidalEasing, ExponentialEasing};
 }
 struct TimelineObject {
     enum Type {CharObject, KeyObject, TweenObject};
@@ -61,7 +61,8 @@ public:
     void addObject(CharacterObject* object, CharacterObject* parent, int index = -1);
     void removeObject(CharacterObject* object);
     void importFromJSONString(QString JSON);
-    void insertKeyframe(CharacterObject* object, QString propertyName, int frameIndex, double value);
+    void insertKeyframe(CharacterObject* object, QString propertyName, int frameIndex, double value,
+                        Keyframe::EasingMode easeIn, Keyframe::EasingMode easeOut);
     QString exportToJSONString();
     void setupParameters(TweenList *parameters);
     bool hasChildren(const QModelIndex &parent) const;
