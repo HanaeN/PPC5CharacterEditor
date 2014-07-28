@@ -25,6 +25,9 @@ void TimelineDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
     bgGradient.setColorAt(1, QColor(248, 248, 248));
     painter->setPen(QColor(128, 128, 128));
     TimelineObject *t = (TimelineObject*)index.internalPointer();
+    if (t->type == TimelineObject::TweenObject) { // draw compiled time line
+
+    }
     if (t->type == TimelineObject::KeyObject) {
         painter->fillRect(option.rect.adjusted(marginL, 0, 0, -1), bgGradient);
         painter->drawRect(option.rect.adjusted(marginL, 0, 0, -1));
@@ -103,7 +106,7 @@ bool TimelineDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, con
                 KeyframeObject &obj = o->keyframes[n];
                 if (obj.frameIndex == mX) {
                     emitted = true;
-                    emit keyframeSelected(&o->keyframes[n]);
+                    emit keyframeSelected(&o->keyframes[n], (o->propertyType == Keyframe::INT) ? true : false);
                     break;
                 }
             }
@@ -112,13 +115,13 @@ bool TimelineDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, con
                     KeyframeObject &obj = o->keyframes[n];
                     if (obj.frameIndex < mX && (n < o->keyframes.count() - 1 && o->keyframes[n + 1].frameIndex > mX)) {
                         emitted = true;
-                        emit keyframeSelected(&o->keyframes[n]);
+                        emit keyframeSelected(&o->keyframes[n], (o->propertyType == Keyframe::INT) ? true : false);
                         break;
                     }
                 }
             }
             if (!emitted) {
-                emit keyframeSelected(NULL);
+                emit keyframeSelected(NULL, false);
             }
             emit this->timelinePositionChange(mX);
         }

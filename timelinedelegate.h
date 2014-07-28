@@ -14,13 +14,13 @@ public:
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const;
     bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
     int scrollX = 0;
-    int timelinePos = 100;
+    int timelinePos = 0;
     int selectedRow = -1;
     int selectedX = 0;
     QModelIndex selectedParent;
 signals:
     void timelinePositionChange(int x);
-    void keyframeSelected(KeyframeObject *obj);
+    void keyframeSelected(KeyframeObject *obj, bool isInt);
 public slots:
 
 };
