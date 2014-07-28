@@ -14,6 +14,9 @@ struct TimelineObject {
 };
 
 struct KeyframeObject {
+    enum EasingMode {NoEasing, LinearEasing, CubicEasing, SinusodialEasing, ExponentialEasing};
+    EasingMode easeIn = NoEasing;
+    EasingMode easeOut = NoEasing;
     double value = 0;
     short frameIndex = 0;
 };
@@ -22,6 +25,7 @@ struct TweenList;
 struct KeyframeList : public TimelineObject {
     KeyframeList() : TimelineObject(KeyObject) {}
     QString propertyName;
+    double currentValue = 0;
     Keyframe::PropertyType propertyType = Keyframe::INT;
     QList<KeyframeObject> keyframes;
     TweenList *parent = NULL;
