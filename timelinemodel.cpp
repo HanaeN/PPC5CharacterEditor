@@ -8,6 +8,12 @@ TimelineModel::TimelineModel(QObject *parent) :
     characterObject->name = "Master";
     characterObject->children = QList<CharacterObject*>();
     setupParameters(characterObject->tweenList);
+    insertKeyframe(characterObject, "alpha", 0, 0);
+    insertKeyframe(characterObject, "alpha", 20, 1);
+    insertKeyframe(characterObject, "alpha", 21, 1);
+    insertKeyframe(characterObject, "posX", 0, 0);
+    insertKeyframe(characterObject, "posX", 10, 100);
+    insertKeyframe(characterObject, "posX", 12, 120);
     CharacterObject *e = new CharacterObject();
     e = new CharacterObject();
     e->name = "testing add object";
@@ -187,13 +193,13 @@ void TimelineModel::insertKeyframe(CharacterObject *object, QString propertyName
             KeyframeObject obj;
             obj.frameIndex = frameIndex;
             obj.value = value;
-            if (keyframelist->keyframes.count() == 0) keyframelist->keyframes.append(obj); // no need to look for the later keyframe
-            else {
+            if (keyframelist->keyframes.count() > 0) {
                 for (int i = 0; i < keyframelist->keyframes.count(); i++) { // insert before the next index
                     KeyframeObject &obj = keyframelist->keyframes[i];
                     if (obj.frameIndex > frameIndex) { keyframelist->keyframes.insert(i, obj); return; }
                 }
             }
+            keyframelist->keyframes.append(obj);
             return;
         }
     }
