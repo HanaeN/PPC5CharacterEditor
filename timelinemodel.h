@@ -6,6 +6,7 @@
 
 namespace Keyframe {
     enum PropertyType{INT, FLOAT};
+    enum EasingMode {NoEasing, LinearEasing, CubicEasing, SinusodialEasing, ExponentialEasing};
 }
 struct TimelineObject {
     enum Type {CharObject, KeyObject, TweenObject};
@@ -14,9 +15,8 @@ struct TimelineObject {
 };
 
 struct KeyframeObject {
-    enum EasingMode {NoEasing, LinearEasing, CubicEasing, SinusodialEasing, ExponentialEasing};
-    EasingMode easeIn = NoEasing;
-    EasingMode easeOut = NoEasing;
+    Keyframe::EasingMode easeIn = Keyframe::NoEasing;
+    Keyframe::EasingMode easeOut = Keyframe::NoEasing;
     double value = 0;
     short frameIndex = 0;
 };

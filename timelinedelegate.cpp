@@ -11,8 +11,6 @@ TimelineDelegate::TimelineDelegate(QObject *parent) :
 }
 
 QSize TimelineDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const {
-//    if (!index.parent().isValid()) return QSize(0, 20);
-    CharacterObject *o = (CharacterObject*)index.internalPointer();
     return QSize(0, 16);
 }
 
@@ -93,7 +91,6 @@ bool TimelineDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, con
         if (e->buttons() == Qt::LeftButton) { // track
             int mX = floor((e->x() - option.rect.left() - 15) / 10);
             mX = mX + scrollX;
-            int mY = floor((e->y() - option.rect.top()) / 16);
             if (mX > 599) mX = 599;
             if (mX < 0) mX = 0;
             selectedRow = index.row();
