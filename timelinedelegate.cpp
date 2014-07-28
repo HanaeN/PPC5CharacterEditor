@@ -34,19 +34,48 @@ void TimelineDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
         KeyframeList *o = (KeyframeList*)index.internalPointer();
 
         painter->setPen(QColor(128, 128, 128, 50));
-        for (int n = 0; n <= cells; n++) {
+        for (int n = 0; n <= cells; n++) {  // draw background lines
             if (n + scrollX > 600) break;
             painter->drawLine(QPoint(sX, sY + 1), QPoint(sX, sY + h - 2));
             sX += 10;
         }
         sX = option.rect.left() + marginL;
+        QLinearGradient fgGradient(0, sY + 2, 0, sY + 15);
+        fgGradient.setColorAt(0, QColor(50, 50, 50, 128));
+        fgGradient.setColorAt(0.5, QColor(90, 90, 90));
+        fgGradient.setColorAt(1, QColor(0, 0, 0, 128));
+        painter->setPen(QColor(0, 0, 0, 180));
+        painter->setClipRect(sX, sY, option.rect.right() - marginL, h);
+        for (int n = 0; n < o->keyframes.count(); n++) {
+            int cellLength = 0;
+            KeyframeObject &obj = o->keyframes[n];
+            if (obj.frameIndex - scrollX > cells) break;
+            if (obj.frameIndex - scrollX >= 0 || (n < o->keyframes.count() - 1 && o->keyframes[n + 1].frameIndex - scrollX >= 0)) { // draw it
+                int kX = sX + ((obj.frameIndex - scrollX) * 10);
+                if (n < o->keyframes.count() - 1) {
+                    cellLength = (o->keyframes[n + 1].frameIndex - obj.frameIndex) - 1;
+                }
+                QLinearGradient bgGradient2(kX, 0, kX + 7 + (cellLength * 10), 0);
+                bgGradient2.setColorAt(0, QColor(128, 128, 255, 100));
+                bgGradient2.setColorAt(1, QColor(160, 160, 255, 100));
+                painter->fillRect(QRect(kX + 1, sY + 2, 9 + (cellLength * 10), 13), bgGradient2);
+                painter->fillRect(QRect(kX + 2, sY + 2, 7, 13), fgGradient);
+                if (cellLength > 0) {
+                    int eX = kX + 7 + (cellLength * 10);
+                    painter->drawLine(QPoint(kX + 9, sY + 8), QPoint(eX, sY + 8));
+                    painter->drawLine(QPoint(eX - 3, sY + 5), QPoint(eX, sY + 8));
+                    painter->drawLine(QPoint(eX - 3, sY + 12), QPoint(eX, sY + 9));
+                }
+            }
+        }
+        painter->setClipping(false);
         if (selectedRow == index.row() && selectedParent == index.parent()) {
             int selX = sX + ((selectedX - scrollX) * 10);
             if (selX >= sX) {
                 int selY = sY + 1;
                 QLinearGradient fgGradient(0, selY, 0, selY + 15);
-                fgGradient.setColorAt(0, QColor(200, 200, 255));
-                fgGradient.setColorAt(1, QColor(170, 170, 200));
+                fgGradient.setColorAt(0, QColor(40, 40, 255, 128));
+                fgGradient.setColorAt(1, QColor(80, 80, 255, 128));
                 painter->fillRect(QRect(selX + 1, selY, 9, 15), fgGradient);
             }
         }
