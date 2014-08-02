@@ -61,16 +61,20 @@ public:
     void addObject(CharacterObject* object, CharacterObject* parent, int index = -1);
     void removeObject(CharacterObject* object);
     void importFromJSONString(QString JSON);
-    void insertKeyframe(CharacterObject* object, QString propertyName, int frameIndex, double value,
+    KeyframeObject& getKeyframe(CharacterObject* object, QString propertyName, int frameIndex);
+    void removeKeyframe(CharacterObject* object, QString propertyName, int frameIndex);
+    KeyframeObject& insertKeyframe(CharacterObject* object, QString propertyName, int frameIndex, double value,
                         Keyframe::EasingMode easeIn, Keyframe::EasingMode easeOut);
     QString exportToJSONString();
     void setupParameters(TweenList *parameters);
     bool hasChildren(const QModelIndex &parent) const;
     ~TimelineModel();
+    CharacterObject *characterObject;
+    QString easeToString(Keyframe::EasingMode value);
+    Keyframe::EasingMode easeToEnum(QString value);
 private:
     void calculateIndexes();
     void calculateIndex(CharacterObject *object);
-    CharacterObject *characterObject;
 
 signals:
 

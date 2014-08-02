@@ -15,6 +15,20 @@ TimelineModel::TimelineModel(QObject *parent) :
     insertKeyframe(characterObject, "zIndex", 0, 0, Keyframe::NoEasing, Keyframe::LinearEasing);
     insertKeyframe(characterObject, "scaleX", 0, 1, Keyframe::NoEasing, Keyframe::LinearEasing);
     insertKeyframe(characterObject, "scaleY", 0, 1, Keyframe::NoEasing, Keyframe::LinearEasing);
+    insertKeyframe(characterObject, "scaleY", 100, 1, Keyframe::NoEasing, Keyframe::LinearEasing);
+    return;
+    CharacterObject *o = new CharacterObject();
+    o->name = "Test";
+    setupParameters(o->tweenList);
+    this->addObject(o, characterObject);
+    o = new CharacterObject();
+    o->name = "Test2";
+    setupParameters(o->tweenList);
+    this->addObject(o, characterObject);
+    o = new CharacterObject();
+    o->name = "Test3";
+    setupParameters(o->tweenList);
+    this->addObject(o, characterObject);
 }
 
 TimelineModel::~TimelineModel() {
@@ -44,13 +58,12 @@ int TimelineModel::rowCount(const QModelIndex &parent) const {
     if (parent.isValid()) {
         TimelineObject *t = (TimelineObject*)parent.internalPointer();
         if (t->type == TimelineObject::CharObject) {
-            return 2;
-            qDebug() << ((CharacterObject*)parent.internalPointer())->children.count() + 1 << "p";
             return ((CharacterObject*)parent.internalPointer())->children.count() + 1;
         }
         if (t->type == TimelineObject::TweenObject) {
             return ((TweenList*)parent.internalPointer())->tweens.count();
         }
+        return 0;
     } else return 1;
 }
 
@@ -179,14 +192,39 @@ void TimelineModel::setupParameters(TweenList* parameters) {
     }
 }
 
-void TimelineModel::insertKeyframe(CharacterObject *object, QString propertyName, int frameIndex, double value,
+
+KeyframeObject& TimelineModel::getKeyframe(CharacterObject *object, QString propertyName, int frameIndex) {
+    for (int n = 0; n < object->tweenList->tweens.count(); n++) {
+        KeyframeList *keyframelist = object->tweenList->tweens[n];
+        if (keyframelist->propertyName == propertyName) { // found;
+            for (int i = 0; i < keyframelist->keyframes.count(); i++) { // update existing frame if it exists
+                KeyframeObject &obj = keyframelist->keyframes[i];
+                if (obj.frameIndex == frameIndex) { return obj; }
+            }
+        }
+    }
+}
+
+void TimelineModel::removeKeyframe(CharacterObject *object, QString propertyName, int frameIndex) {
+    for (int n = 0; n < object->tweenList->tweens.count(); n++) {
+        KeyframeList *keyframelist = object->tweenList->tweens[n];
+        if (keyframelist->propertyName == propertyName) { // found;
+            for (int i = 0; i < keyframelist->keyframes.count(); i++) { // update existing frame if it exists
+                KeyframeObject &obj = keyframelist->keyframes[i];
+                if (obj.frameIndex == frameIndex) { object->tweenList->tweens[n]->keyframes.removeAt(i); return; }
+            }
+        }
+    }
+}
+
+KeyframeObject& TimelineModel::insertKeyframe(CharacterObject *object, QString propertyName, int frameIndex, double value,
                                    Keyframe::EasingMode easeIn, Keyframe::EasingMode easeOut) {
     for (int n = 0; n < object->tweenList->tweens.count(); n++) {
         KeyframeList *keyframelist = object->tweenList->tweens[n];
         if (keyframelist->propertyName == propertyName) { // found;
             for (int i = 0; i < keyframelist->keyframes.count(); i++) { // update existing frame if it exists
                 KeyframeObject &obj = keyframelist->keyframes[i];
-                if (obj.frameIndex == frameIndex) { obj.value = value; obj.easeIn = easeIn; obj.easeOut = easeOut; return; }
+                if (obj.frameIndex == frameIndex) { obj.value = value; obj.easeIn = easeIn; obj.easeOut = easeOut; return obj; }
             }
             KeyframeObject obj;
             obj.frameIndex = frameIndex;
@@ -195,12 +233,33 @@ void TimelineModel::insertKeyframe(CharacterObject *object, QString propertyName
             obj.easeOut = easeOut;
             if (keyframelist->keyframes.count() > 0) {
                 for (int i = 0; i < keyframelist->keyframes.count(); i++) { // insert before the next index
-                    KeyframeObject &obj = keyframelist->keyframes[i];
-                    if (obj.frameIndex > frameIndex) { keyframelist->keyframes.insert(i, obj); return; }
+                    KeyframeObject &o = keyframelist->keyframes[i];
+                    if (o.frameIndex > frameIndex) { keyframelist->keyframes.insert(i, obj); return keyframelist->keyframes[i]; }
                 }
             }
             keyframelist->keyframes.append(obj);
-            return;
+            return keyframelist->keyframes[keyframelist->keyframes.count() - 1];
         }
     }
+}
+
+QString TimelineModel::easeToString(Keyframe::EasingMode value) {
+    if (value == Keyframe::NoEasing) return "None";
+    if (value == Keyframe::CubicEasing) return "Cubic";
+    if (value == Keyframe::ExponentialEasing) return "Exponential";
+    if (value == Keyframe::LinearEasing) return "Linear";
+    if (value == Keyframe::QuadraticEasing) return "Quadratic";
+    if (value == Keyframe::SinusoidalEasing) return "Sinusoidal";
+    return "INVALID";
+}
+
+Keyframe::EasingMode TimelineModel::easeToEnum(QString value) {
+    value = value.toLower();
+    if (value == "none") return Keyframe::NoEasing;
+    if (value == "cubic") return Keyframe::CubicEasing;
+    if (value == "exponential") return Keyframe::ExponentialEasing;
+    if (value == "linear") return Keyframe::LinearEasing;
+    if (value == "quadratic") return Keyframe::QuadraticEasing;
+    if (value == "sinusoidal") return Keyframe::SinusoidalEasing;
+    return Keyframe::NoEasing;
 }

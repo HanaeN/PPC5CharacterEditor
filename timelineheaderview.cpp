@@ -22,8 +22,9 @@ void TimelineHeaderView::paintSection(QPainter *painter, const QRect &rect, int 
     bgGradient.setColorAt(1, QColor(230, 230, 230));
     painter->setPen(QColor(128, 128, 128));
     painter->fillRect(rect, bgGradient);
+    painter->setPen(QColor(128, 128, 128, 200));
+    painter->drawLine(QPoint(0, h -1), QPoint(rect.right(), h-1));
     if (logicalIndex == 1) {
-        painter->setPen(QColor(128, 128, 128, 200));
         painter->drawLine(QPoint(rect.left() + 1, sY + 4), QPoint(rect.left() + 1, sY + h - 4));
         int cells = ceil(rect.width() / 10);
         painter->setPen(QColor(0, 0, 0));
@@ -38,7 +39,6 @@ void TimelineHeaderView::paintSection(QPainter *painter, const QRect &rect, int 
             sX += 10;
         }
     } else {
-        painter->setPen(QColor(128, 128, 128, 200));
         painter->drawLine(QPoint(rect.right() - 1, sY + 4), QPoint(rect.right() - 1, sY + h - 4));
     }
 }

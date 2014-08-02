@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QEvent>
 #include <QMouseEvent>
+#include <QVarLengthArray>
+#include <QMenu>
 
 TimelineDelegate::TimelineDelegate(QObject *parent) :
     QStyledItemDelegate(parent)
@@ -20,27 +22,17 @@ void TimelineDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
     int sX = option.rect.left() + marginL;
     int sY = option.rect.top();
     int h = option.rect.height();
-    QLinearGradient bgGradient(0, sY, 0, sY + h);
-    bgGradient.setColorAt(0, Qt::white);
-    bgGradient.setColorAt(1, QColor(248, 248, 248));
     painter->setPen(QColor(128, 128, 128));
     TimelineObject *t = (TimelineObject*)index.internalPointer();
     if (t->type == TimelineObject::TweenObject) { // draw compiled time line
 
     }
     if (t->type == TimelineObject::KeyObject) {
-        painter->fillRect(option.rect.adjusted(marginL, 0, 0, -1), bgGradient);
+        painter->drawImage(QPoint(sX, sY + 1), cellImg, QRect(0, 0, option.rect.right() - sX, h - 2));
         painter->drawRect(option.rect.adjusted(marginL, 0, 0, -1));
         int cells = ceil(option.rect.width() / 10);
         KeyframeList *o = (KeyframeList*)index.internalPointer();
-
-        painter->setPen(QColor(128, 128, 128, 50));
-        for (int n = 0; n <= cells; n++) {  // draw background lines
-            if (n + scrollX > 600) break;
-            painter->drawLine(QPoint(sX, sY + 1), QPoint(sX, sY + h - 2));
-            sX += 10;
-        }
-        sX = option.rect.left() + marginL;
+        painter->setPen(QColor(220, 220, 220));
         QLinearGradient fgGradient(0, sY + 2, 0, sY + 15);
         fgGradient.setColorAt(0, QColor(50, 50, 50, 128));
         fgGradient.setColorAt(0.5, QColor(90, 90, 90));
@@ -91,7 +83,7 @@ bool TimelineDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, con
     if (t->type == TimelineObject::KeyObject) {
         if (event->type() != QEvent::MouseButtonPress && event->type() != QEvent::MouseButtonRelease && event->type() != QEvent::MouseMove) return true;
         QMouseEvent *e = (QMouseEvent*)event;
-        if (e->buttons() == Qt::LeftButton) { // track
+        if (e->buttons() == Qt::LeftButton || (e->buttons() == Qt::RightButton && event->type() == QEvent::MouseButtonPress)) { // track
             int mX = floor((e->x() - option.rect.left() - 15) / 10);
             mX = mX + scrollX;
             if (mX > 599) mX = 599;
@@ -106,7 +98,7 @@ bool TimelineDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, con
                 KeyframeObject &obj = o->keyframes[n];
                 if (obj.frameIndex == mX) {
                     emitted = true;
-                    emit keyframeSelected(&o->keyframes[n], (o->propertyType == Keyframe::INT) ? true : false);
+                    emit keyframeSelected(&o->keyframes[n], true, (o->propertyType == Keyframe::INT) ? true : false);
                     break;
                 }
             }
@@ -115,14 +107,15 @@ bool TimelineDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, con
                     KeyframeObject &obj = o->keyframes[n];
                     if (obj.frameIndex < mX && (n < o->keyframes.count() - 1 && o->keyframes[n + 1].frameIndex > mX)) {
                         emitted = true;
-                        emit keyframeSelected(&o->keyframes[n], (o->propertyType == Keyframe::INT) ? true : false);
+                        emit keyframeSelected(&o->keyframes[n], false, (o->propertyType == Keyframe::INT) ? true : false);
                         break;
                     }
                 }
             }
             if (!emitted) {
-                emit keyframeSelected(NULL, false);
+                emit keyframeSelected(NULL, false, false);
             }
+            if  (e->buttons() == Qt::RightButton && event->type() == QEvent::MouseButtonPress) emit contextMenu(o->parent->parent, o->propertyName, o->propertyType, mX, e->globalPos());
             emit this->timelinePositionChange(mX);
         }
     }

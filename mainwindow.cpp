@@ -1,10 +1,13 @@
 #include "mainwindow.h"
-#include "timelinemodel.h"
 #include "timelinedelegate.h"
 #include "timelineheaderview.h"
 #include "ui_mainwindow.h"
 
 #include <QDebug>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QGLWidget>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -20,9 +23,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->e_Editor->setModel(timeline);
     ui->e_Editor->expandAll();
     ui->e_Editor->setMouseTracking(true);
+    ui->e_Editor->setViewport(new QGLWidget());
     headerView->resizeSection(0, 200);
     connect(delegate, SIGNAL(timelinePositionChange(int)), this, SLOT(onTimelinePositionChanged(int)));
-    connect(delegate, SIGNAL(keyframeSelected(KeyframeObject*,bool)), this, SLOT(onKeyframeSelected(KeyframeObject*,bool)));
+    connect(delegate, SIGNAL(keyframeSelected(KeyframeObject*,bool,bool)), this, SLOT(onKeyframeSelected(KeyframeObject*,bool,bool)));
+    connect(delegate, SIGNAL(contextMenu(CharacterObject*,QString,Keyframe::PropertyType,int,QPoint)), SLOT(onContextMenu(CharacterObject*,QString,Keyframe::PropertyType,int,QPoint)));
 }
 
 
@@ -58,8 +63,9 @@ void MainWindow::onTimelinePositionChanged(int x) {
     ui->e_Editor->viewport()->update();
 }
 
-void MainWindow::onKeyframeSelected(KeyframeObject *obj, bool isint) {
+void MainWindow::onKeyframeSelected(KeyframeObject *obj, bool isAtX, bool isint) {
     isInt = isint;
+    atKeyframe = isAtX;
     editingKeyframe = NULL;
     if (obj != NULL) {
         ui->e_value->setText(QString::number(obj->value));
@@ -174,4 +180,89 @@ void MainWindow::on_e_easingin_currentIndexChanged(int index)
         if (index == 4) editingKeyframe->easeIn = Keyframe::ExponentialEasing;
     }
 
+}
+
+void MainWindow::exportJSON() {
+    QJsonObject master;
+    QJsonObject characterInfo;
+    characterInfo["Name"] = ui->e_name->text();
+    characterInfo["Dropset"] = "2222222222222222";
+    characterInfo["AITrait"] = ui->e_trait->currentText();
+    characterInfo["AIDifficulty"] = ui->e_aidifficulty->currentText();
+    QJsonObject obj;
+    obj["CharacterInfo"] = characterInfo;
+    master["Keyframes"] = exportKeyframeJSON(timeline->characterObject->tweenList);
+    master["Children"] = exportChildJSON(timeline->characterObject->children);
+    obj["Master"] = master;
+    QJsonDocument doc(obj);
+    qDebug() << doc.toJson().data();
+}
+
+void MainWindow::on_action_Save_triggered()
+{
+    exportJSON();
+}
+
+QJsonObject MainWindow::exportKeyframeJSON(TweenList *tweenList) {
+    QJsonObject r;
+    for (int n = 0; n < tweenList->tweens.count(); n++){
+        KeyframeList *list = tweenList->tweens[n];
+        QString paramName = list->propertyName;
+        QJsonArray keyframes;
+        for (int i = 0; i < list->keyframes.count(); i++) {
+            KeyframeObject &obj = list->keyframes[i];
+            QJsonObject o;
+            o["index"] = obj.frameIndex;
+            o["value"] = obj.value;
+            o["easeIn"] = timeline->easeToString(obj.easeIn);
+            o["easeOut"] = timeline->easeToString(obj.easeOut);
+            keyframes.append(o);
+        }
+        r[paramName] = keyframes;
+    }
+    return r;
+}
+
+QJsonArray MainWindow::exportChildJSON(QList<CharacterObject *> &children) {
+    QJsonArray a;
+    for (int n = 0; n < children.count(); n++) {
+        QJsonObject child;
+        CharacterObject *obj = children[n];
+        child["Name"] = obj->name;
+        child["Children"] = exportChildJSON(obj->children);
+        child["Keyframes"] = exportKeyframeJSON(obj->tweenList);
+        a.append(child);
+    }
+    return a;
+}
+
+void MainWindow::onContextMenu(CharacterObject *obj, QString propertyName, Keyframe::PropertyType propertyType, int index, QPoint mPos) {
+    if (atKeyframe) { // offer remove options here
+        QMenu menu(this);
+        QAction *a = new QAction("Remove Keyframe", this);
+        connect(a, &QAction::triggered, [=]() {
+            timeline->removeKeyframe(obj, propertyName, index);
+            this->onKeyframeSelected(NULL, false, false);
+        });
+        menu.addAction(a);
+        menu.exec(mPos);
+    } else {
+        QMenu menu(this);
+        QAction *a = new QAction("Insert Keyframe", this);
+        connect(a, &QAction::triggered, [=]() {
+            if (editingKeyframe != NULL) {
+                KeyframeObject &o = timeline->insertKeyframe(obj, propertyName, index, editingKeyframe->value, editingKeyframe->easeIn, editingKeyframe->easeOut);
+                onKeyframeSelected(&o, true, propertyType == Keyframe::INT ? true : false);
+            } else {
+                KeyframeObject &o = timeline->insertKeyframe(obj, propertyName, index, 0, Keyframe::NoEasing, Keyframe::LinearEasing);
+                onKeyframeSelected(&o, true, propertyType == Keyframe::INT ? true : false);
+            }
+        });
+        menu.addAction(a);
+        menu.exec(mPos);
+    }
+}
+
+void MainWindow::insertKeyframe() {
+    qDebug() << "inserting because pie";
 }

@@ -2,8 +2,8 @@
 #define TIMELINEDELEGATE_H
 
 #include <QStyledItemDelegate>
+#include "timelinemodel.h"
 
-struct KeyframeObject;
 
 class TimelineDelegate : public QStyledItemDelegate
 {
@@ -18,9 +18,12 @@ public:
     int selectedRow = -1;
     int selectedX = 0;
     QModelIndex selectedParent;
+private:
+    QImage cellImg = QImage(":/gfx/images/cells.png");
 signals:
+    void contextMenu(CharacterObject *obj, QString propertyName, Keyframe::PropertyType propertyType, int index, QPoint mPos);
     void timelinePositionChange(int x);
-    void keyframeSelected(KeyframeObject *obj, bool isInt);
+    void keyframeSelected(KeyframeObject *obj, bool isAtX, bool isInt);
 public slots:
 
 };
